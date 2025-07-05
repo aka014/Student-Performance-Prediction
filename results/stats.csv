@@ -1,2 +1,5 @@
 name, mae, mse, r2
 ohe_num_linear_regression,2.64,3.80,0.01
+ohe_num_linear_regression_train,1.55,2.01,0.42
+ohe_num_linear_regression_g1_g2_train,0.67,1.01,0.85
+ohe_num_linear_regression_g1_g2,0.95,1.65,0.81

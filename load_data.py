@@ -22,14 +22,10 @@ def read_csv(file_path, drop_grades=True):
     # Read CSV file
     df = pd.read_csv(file_path, sep=';')
 
-    # print("DataFrame head:")
-    # print(df.head())
-    # print("\nDataFrame info:")
-    # df.info()
-
     # These features are obviously the most important ones, so the model will be tested without them
+    #maybe make drop grades a class attribute in order to get it for writing!!
     if drop_grades:
-        df.drop(columns=['G1', 'G2'], inplace=True)
+       df.drop(columns=['G1', 'G2'], inplace=True)
 
     return df
 
@@ -40,7 +36,7 @@ def split_data_for_lr(df, train='GP'):
 
     Parameters:
         df (DataFrame): Dataset.
-        train (str): 'GP' or 'MS'
+        train (string): 'GP' or 'MS'
 
     Returns:
         tuple: X_train, y_train, X_test, y_test
@@ -54,7 +50,7 @@ def split_data_for_lr(df, train='GP'):
         train = 'GP'
         test = 'MS'
 
-
+    # Split dataset based on school
     df_train = df[df['school'] == train].copy()
     df_test = df[df['school'] == test].copy()
 
@@ -70,82 +66,108 @@ def split_data_for_lr(df, train='GP'):
     X_test = df_test.drop(columns=['G3'], inplace=False)
     y_test = df_test['G3'].copy()
 
-    # print("DataFrame head:")
-    # print(X_train.head())
-    # print("\nDataFrame info:")
-    # X_train.info()
-    #
-    # print("DataFrame head:")
-    # print(X_test.head())
-    # print("\nDataFrame info:")
-    # X_test.info()
-    #
-    # print("DataFrame head:")
-    # print(y_train.head())
-    # print("\nDataFrame info:")
-    # y_train.info()
-    #
-    # print("DataFrame head:")
-    # print(y_test.head())
-    # print("\nDataFrame info:")
-    # y_test.info()
 
     return X_train, y_train, X_test, y_test
 
 def evaluate_models(X_train, y_train, X_test, y_test, models, preprocessor, subject):
+    """
+    Iterates through models and evaluates them, while writing necessary stats and data to CSV files.
+
+    Parameters:
+        X_train (DataFrame): Training dataset of features.
+        y_train (DataFrame): Training dataset of targets.
+        X_test (DataFrame): Testing dataset of features.
+        y_test (DataFrame): Testing dataset of targets.
+        models (dict): List of models.
+        preprocessor (ColumnTransformer): Column transformer which contains feature preprocessing methods.
+        subject (string): School subject of data ("por" or "mat").
+    """
+
+    # For every model create individual pipelines
     for name, model in models.items():
         pipeline = Pipeline(steps=[
             ('preprocessor', preprocessor),
             ('regressor', model)
         ])
 
+        # Train model
         pipeline.fit(X_train, y_train)
+        # Make predictions
         y_pred = pipeline.predict(X_test)
 
+        # Write important stats and results to CSV files
         calculate_and_write_results(name, pipeline, y_pred, y_test, subject)
 
 
 
 def calculate_and_write_results(model_name, pipeline, y_pred, y_test, subject):
+    """
+    Writes model's coefficients, intercept and stats to CSV files.
 
+    Parameters:
+        model_name (string): Name of the model.
+        pipeline (Pipeline): Pipeline utilized for this iteration.
+        y_pred (DataFrame): Predicted values.
+        y_test (DataFrame): True values.
+        subject (string): School subject of data ("por" or "mat").
+    """
+
+    # Get categorical feature column headers
     preprocessor = pipeline.named_steps['preprocessor']
     ohe = preprocessor.named_transformers_['ohe']
     encoded_names = ohe.get_feature_names_out(categorical_features)
 
+    # Recreate all feature column headers
     all_feature_names = list(encoded_names) + numeric_features
-    # To also show bias in the csv
-    all_feature_names.append('intercept (b)')
+    # Also show intercept (bias) in the CSV
+    all_feature_names.append('intercept')
 
-
-    print("Predictions:", y_pred)
-
+    # Get coefficient (weights) and intercept (bias)
     model = pipeline.named_steps['regressor']
     weights = model.coef_
     intercept = model.intercept_
 
+    # Round values to 4 decimals
     result = np.append(weights, intercept)
     rounded_result = np.round(result, decimals=4)
 
     result = pd.DataFrame([rounded_result], columns=all_feature_names)
 
+    # Generate a prefix to tell different preprocessor combinations apart
     methods = []
     for name in preprocessor.named_transformers_.keys():
         methods.append(name)
-    prefix = "_".join(methods) #creates a string efficiently
+    prefix = "_".join(methods) # More efficient than += operator
 
     result.to_csv(f"results/{subject}/{prefix}_{model_name}.csv", index=False, header=True)
 
+    # Calculate stats
     mse = mean_squared_error(y_test, y_pred)
     mae = mean_absolute_error(y_test, y_pred)
     rmse = np.sqrt(mse)
     r2 = r2_score(y_test, y_pred)
 
+    # Write to results/stats.csv
     add_stats(prefix, model_name, mae, rmse, r2)
 
 def add_stats(prefix, model_name, mae, rmse, r2):
+    """
+    Write model's stats to results/stats.csv.
 
-    df = pd.DataFrame([[f"{prefix}_{model_name}", f"{mae:.2f}", f"{rmse:.2f}", f"{r2:.2f}"]], columns=['name', 'mae', 'rmse', 'r2'])
-    df.to_csv(f"results/stats.csv", index=False, header=False, mode='a') #append to existing info
+    Parameters:
+        prefix (string): Prefix added to model's name.
+        model_name (string): Name of the model.
+        mae (float): Mean absolute error of the prediction.
+        rmse (float): Root mean square error of the prediction.
+        r2 (float): R^2 score of the prediction.
+    """
+
+    # Create a dataframe to append
+    df = pd.DataFrame([[f"{prefix}_{model_name}", f"{mae:.2f}", f"{rmse:.2f}", f"{r2:.2f}"]],
+                      columns=['name', 'mae', 'rmse', 'r2'])
+
+    # Append dataframe to existing file
+    df.to_csv(f"results/stats.csv", index=False, header=False, mode='a') 
 
 
 def main():
