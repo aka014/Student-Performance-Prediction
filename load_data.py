@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
+from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import matplotlib.pyplot as plt
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 
 
@@ -31,20 +33,34 @@ def read_csv(file_path, drop_grades=True):
 
     return df
 
-def encode_categorical_features(features):
+
+def split_data_for_lr(df, train='GP'):
+    """
+    Splits dataset into training and test sets.
+
+    Parameters:
+        df (DataFrame): Dataset.
+        train (str): 'GP' or 'MS'
+
+    Returns:
+        tuple: X_train, y_train, X_test, y_test
+        X - input features
+        y - target values
     """
 
-    """
+    if train == 'GP': test = 'MS'
+    elif train == 'MS': test = 'GP'
+    else:
+        train = 'GP'
+        test = 'MS'
 
-
-def split_data_for_lr(df, train='GP', test='MS'):
-    """
-    First do this split and then create pipelines where i also might not even need this encoding function
-    we will go with school a train and school b test since there are no hyperparameters
-    """
 
     df_train = df[df['school'] == train].copy()
     df_test = df[df['school'] == test].copy()
+
+    # The split is done using school as a criteria, so it becomes an unnecessary feature
+    df_train.drop(columns=['school'], inplace=True)
+    df_test.drop(columns=['school'], inplace=True)
 
     # Separate input features from target values for training
     X_train = df_train.drop(columns=['G3'], inplace=False)
@@ -82,48 +98,67 @@ data = read_csv("data/student-por.csv")
 
 X_train, y_train, X_test, y_test = split_data_for_lr(data)
 
-categorical_features = ['school', 'sex', 'address', 'famsize', 'Pstatus', 'Mjob', 'Fjob', 'reason', 'guardian',
+categorical_features = ['sex', 'address', 'famsize', 'Pstatus', 'Mjob', 'Fjob', 'reason', 'guardian',
                         'schoolsup', 'famsup', 'paid', 'activities', 'nursery', 'higher', 'internet', 'romantic']
+numeric_features = ['age', 'Medu', 'Fedu', 'traveltime', 'studytime', 'failures', 'famrel', 'freetime', 'goout',
+                    'Dalc', 'Walc', 'health', 'absences']
+
+preprocessor = ColumnTransformer(
+    transformers=[
+        ('cat', OneHotEncoder(handle_unknown='ignore', drop='if_binary'), categorical_features),
+        ('num', 'passthrough', numeric_features)
+    ],
+    remainder='passthrough'
+)
+
+pipeline = Pipeline(steps=[('preprocessor', preprocessor),
+                           ('regressor', LinearRegression())
+])
+
+pipeline.fit(X_train, y_train)
+
+preprocessor = pipeline.named_steps['preprocessor']
+ohe = preprocessor.named_transformers_['cat']
+
+encoded_cat_names = ohe.get_feature_names_out(categorical_features)
+
+all_feature_names = list(encoded_cat_names) + numeric_features
+
+# To also show bias in the csv
+all_feature_names.append('intercept (b)')
 
 
+y_pred = pipeline.predict(X_test)
+mse = mean_squared_error(y_test, y_pred)
+mae = mean_absolute_error(y_test, y_pred)
+print("Test MSE:", mse)
+print("Test MAE:", mae)
 
 
+rmse = np.sqrt(mse) # Root Mean Squared Error
+r2 = r2_score(y_test, y_pred)
+print(f"Root Mean Squared Error (RMSE): {rmse:.2f}")
+print(f"R-squared (R2) Score: {r2:.2f}")
 
+print("Predictions:", y_pred)
 
-# print(f"X_train shape: {X_train.shape}, y_train shape: {y_train.shape}")
-# print(f"X_test shape: {X_test.shape}, y_test shape: {y_test.shape}")
+model = pipeline.named_steps['regressor']
 
+weights = model.coef_
 
+intercept = model.intercept_
 
-# # --- 2. Create the Linear Regression model ---
-# model = LinearRegression()
-#
-# # --- 3. Train (fit) the model using the training data ---
-# print("\nTraining the Linear Regression model...")
-# model.fit(X_train, y_train)
-# print("Model training complete. 🎉")
-#
-# # --- 4. Make predictions on the test data ---
-# y_pred = model.predict(X_test)
-# print("\nPredictions on the test set generated. 📊")
-#
-# # --- 5. Evaluate the model ---
-# mse = mean_squared_error(y_test, y_pred)
-# rmse = np.sqrt(mse) # Root Mean Squared Error
-# r2 = r2_score(y_test, y_pred)
-#
-# print(f"\n--- Model Evaluation ---")
-# #print(model.score(X_test, y_test))
-# print(f"Model Intercept (b0): {model.intercept_:.2f}")
-# # if model.coef_.ndim > 1: # Check if coefficients are nested (for multiple features)
-# #     print(f"Model Coefficients (b1, b2, ...): {np.array(model.coef_).flatten()}")
-# # else:
-# #     print(f"Model Coefficient (b1): {model.coef_:.2f}")
-#
-# print(f"Mean Squared Error (MSE): {mse:.2f}")
-# print(f"Root Mean Squared Error (RMSE): {rmse:.2f}")
-# print(f"R-squared (R2) Score: {r2:.2f}")
-#
-# print(y_test)
-# dataf = pd.DataFrame(y_pred)
-# print(dataf)
+print("Weights:", weights)
+
+print("Intercept:", intercept)
+
+result = np.append(weights, intercept)
+rounded_result = np.round(result, decimals=4)
+
+result = pd.DataFrame([rounded_result], columns=all_feature_names)
+
+print(result.head())
+
+result.to_csv("results/por/ohe_linear_regression.csv", index=False, header=True)
+
+#create a separate csv where you will store all results metrics (rmse, mae...)
