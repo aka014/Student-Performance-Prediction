@@ -70,27 +70,82 @@ def split_data_for_lr(df, train='GP'):
     X_test = df_test.drop(columns=['G3'], inplace=False)
     y_test = df_test['G3'].copy()
 
-    print("DataFrame head:")
-    print(X_train.head())
-    print("\nDataFrame info:")
-    X_train.info()
-
-    print("DataFrame head:")
-    print(X_test.head())
-    print("\nDataFrame info:")
-    X_test.info()
-
-    print("DataFrame head:")
-    print(y_train.head())
-    print("\nDataFrame info:")
-    y_train.info()
-
-    print("DataFrame head:")
-    print(y_test.head())
-    print("\nDataFrame info:")
-    y_test.info()
+    # print("DataFrame head:")
+    # print(X_train.head())
+    # print("\nDataFrame info:")
+    # X_train.info()
+    #
+    # print("DataFrame head:")
+    # print(X_test.head())
+    # print("\nDataFrame info:")
+    # X_test.info()
+    #
+    # print("DataFrame head:")
+    # print(y_train.head())
+    # print("\nDataFrame info:")
+    # y_train.info()
+    #
+    # print("DataFrame head:")
+    # print(y_test.head())
+    # print("\nDataFrame info:")
+    # y_test.info()
 
     return X_train, y_train, X_test, y_test
+
+def evaluate_models(X_train, y_train, X_test, y_test, models, preprocessor, subject):
+    for name, model in models.items():
+        pipeline = Pipeline(steps=[
+            ('preprocessor', preprocessor),
+            ('regressor', model)
+        ])
+
+        pipeline.fit(X_train, y_train)
+        y_pred = pipeline.predict(X_test)
+
+        calculate_and_write_results(name, pipeline, y_pred, y_test, subject)
+
+
+
+def calculate_and_write_results(model_name, pipeline, y_pred, y_test, subject):
+
+    preprocessor = pipeline.named_steps['preprocessor']
+    ohe = preprocessor.named_transformers_['ohe']
+    encoded_names = ohe.get_feature_names_out(categorical_features)
+
+    all_feature_names = list(encoded_names) + numeric_features
+    # To also show bias in the csv
+    all_feature_names.append('intercept (b)')
+
+
+    print("Predictions:", y_pred)
+
+    model = pipeline.named_steps['regressor']
+    weights = model.coef_
+    intercept = model.intercept_
+
+    result = np.append(weights, intercept)
+    rounded_result = np.round(result, decimals=4)
+
+    result = pd.DataFrame([rounded_result], columns=all_feature_names)
+
+    methods = []
+    for name in preprocessor.named_transformers_.keys():
+        methods.append(name)
+    prefix = "_".join(methods) #creates a string efficiently
+
+    result.to_csv(f"results/{subject}/{prefix}_{model_name}.csv", index=False, header=True)
+
+    mse = mean_squared_error(y_test, y_pred)
+    mae = mean_absolute_error(y_test, y_pred)
+    rmse = np.sqrt(mse)
+    r2 = r2_score(y_test, y_pred)
+
+    add_stats(prefix, model_name, mae, rmse, r2)
+
+def add_stats(prefix, model_name, mae, rmse, r2):
+
+    df = pd.DataFrame([[f"{prefix}_{model_name}", f"{mae:.2f}", f"{rmse:.2f}", f"{r2:.2f}"]], columns=['name', 'mae', 'rmse', 'r2'])
+    df.to_csv(f"results/stats.csv", index=False, header=False, mode='a') #append to existing info
 
 
 
@@ -105,60 +160,25 @@ numeric_features = ['age', 'Medu', 'Fedu', 'traveltime', 'studytime', 'failures'
 
 preprocessor = ColumnTransformer(
     transformers=[
-        ('cat', OneHotEncoder(handle_unknown='ignore', drop='if_binary'), categorical_features),
+        ('ohe', OneHotEncoder(handle_unknown='ignore', drop='if_binary'), categorical_features),
         ('num', 'passthrough', numeric_features)
     ],
     remainder='passthrough'
 )
 
-pipeline = Pipeline(steps=[('preprocessor', preprocessor),
-                           ('regressor', LinearRegression())
-])
+# pipeline = Pipeline(steps=[('preprocessor', preprocessor),
+#                            ('regressor', LinearRegression())
+# ])
+#
+# pipeline.fit(X_train, y_train)
 
-pipeline.fit(X_train, y_train)
+models = {
+    'linear_regression' : LinearRegression()
+}
 
-preprocessor = pipeline.named_steps['preprocessor']
-ohe = preprocessor.named_transformers_['cat']
-
-encoded_cat_names = ohe.get_feature_names_out(categorical_features)
-
-all_feature_names = list(encoded_cat_names) + numeric_features
-
-# To also show bias in the csv
-all_feature_names.append('intercept (b)')
+evaluate_models(X_train, y_train, X_test, y_test, models, preprocessor, 'por')
 
 
-y_pred = pipeline.predict(X_test)
-mse = mean_squared_error(y_test, y_pred)
-mae = mean_absolute_error(y_test, y_pred)
-print("Test MSE:", mse)
-print("Test MAE:", mae)
-
-
-rmse = np.sqrt(mse) # Root Mean Squared Error
-r2 = r2_score(y_test, y_pred)
-print(f"Root Mean Squared Error (RMSE): {rmse:.2f}")
-print(f"R-squared (R2) Score: {r2:.2f}")
-
-print("Predictions:", y_pred)
-
-model = pipeline.named_steps['regressor']
-
-weights = model.coef_
-
-intercept = model.intercept_
-
-print("Weights:", weights)
-
-print("Intercept:", intercept)
-
-result = np.append(weights, intercept)
-rounded_result = np.round(result, decimals=4)
-
-result = pd.DataFrame([rounded_result], columns=all_feature_names)
-
-print(result.head())
-
-result.to_csv("results/por/ohe_linear_regression.csv", index=False, header=True)
 
 #create a separate csv where you will store all results metrics (rmse, mae...)
+
