@@ -148,37 +148,37 @@ def add_stats(prefix, model_name, mae, rmse, r2):
     df.to_csv(f"results/stats.csv", index=False, header=False, mode='a') #append to existing info
 
 
+def main():
+    if __name__ == '__main__':
+        data = read_csv("data/student-por.csv")
 
-data = read_csv("data/student-por.csv")
+        X_train, y_train, X_test, y_test = split_data_for_lr(data)
 
-X_train, y_train, X_test, y_test = split_data_for_lr(data)
+        preprocessor = ColumnTransformer(
+            transformers=[
+                ('ohe', OneHotEncoder(handle_unknown='ignore', drop='if_binary'), categorical_features),
+                ('num', 'passthrough', numeric_features)
+            ]
+        )
+
+        models = {
+            'linear_regression': LinearRegression()
+        }
+
+        evaluate_models(X_train, y_train, X_test, y_test, models, preprocessor, 'por')
+
+
+
+#maybe make everything a class, so there is no problem with feature names being global varialbes
 
 categorical_features = ['sex', 'address', 'famsize', 'Pstatus', 'Mjob', 'Fjob', 'reason', 'guardian',
                         'schoolsup', 'famsup', 'paid', 'activities', 'nursery', 'higher', 'internet', 'romantic']
 numeric_features = ['age', 'Medu', 'Fedu', 'traveltime', 'studytime', 'failures', 'famrel', 'freetime', 'goout',
                     'Dalc', 'Walc', 'health', 'absences']
 
-preprocessor = ColumnTransformer(
-    transformers=[
-        ('ohe', OneHotEncoder(handle_unknown='ignore', drop='if_binary'), categorical_features),
-        ('num', 'passthrough', numeric_features)
-    ],
-    remainder='passthrough'
-)
-
-# pipeline = Pipeline(steps=[('preprocessor', preprocessor),
-#                            ('regressor', LinearRegression())
-# ])
-#
-# pipeline.fit(X_train, y_train)
-
-models = {
-    'linear_regression' : LinearRegression()
-}
-
-evaluate_models(X_train, y_train, X_test, y_test, models, preprocessor, 'por')
+main()
 
 
 
-#create a separate csv where you will store all results metrics (rmse, mae...)
+
 
