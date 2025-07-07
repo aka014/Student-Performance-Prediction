@@ -1,11 +1,13 @@
 import pandas as pd
 import numpy as np
 from sklearn.compose import ColumnTransformer
+from sklearn.feature_selection import SelectKBest, f_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
 import matplotlib.pyplot as plt
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler, PolynomialFeatures
+
 
 
 def read_csv(file_path, drop_grades=True):
@@ -69,9 +71,12 @@ def split_data_for_lr(df, train='GP'):
 
     return X_train, y_train, X_test, y_test
 
-def evaluate_models(X_train, y_train, X_test, y_test, models, preprocessor, subject):
+def evaluate_models_cont(X_train, y_train, X_test, y_test, models, preprocessor, subject):
     """
     Iterates through models and evaluates them, while writing necessary stats and data to CSV files.
+
+    This function is called when preprocessors do not change number of feature columns after One-Hot Encoding
+    (e.g. RFE and PolynomialFeatures).
 
     Parameters:
         X_train (DataFrame): Training dataset of features.
@@ -87,6 +92,7 @@ def evaluate_models(X_train, y_train, X_test, y_test, models, preprocessor, subj
     for name, model in models.items():
         pipeline = Pipeline(steps=[
             ('preprocessor', preprocessor),
+            ('feature_selection', SelectKBest(score_func=f_regression, k=5)),  # Select the top 5 features
             ('regressor', model)
         ])
 
@@ -95,8 +101,26 @@ def evaluate_models(X_train, y_train, X_test, y_test, models, preprocessor, subj
         # Make predictions
         y_pred = pipeline.predict(X_test)
 
+
+
         # Write important stats and results to CSV files
-        calculate_and_write_results(name, pipeline, y_pred, y_test, subject)
+        #calculate_and_write_results(name, pipeline, y_pred, y_test, subject)
+
+        model = pipeline.named_steps['regressor']
+        weights = model.coef_
+        intercept = model.intercept_
+
+        mse = mean_squared_error(y_test, y_pred)
+        mae = mean_absolute_error(y_test, y_pred)
+        rmse = np.sqrt(mse)
+        r2 = r2_score(y_test, y_pred)
+
+        print(weights)
+        print(intercept)
+        print(f"Mae: {mae}")
+        print(f"RMSE: {rmse}")
+        print(f"R2: {r2}")
+
 
 
 
@@ -167,7 +191,7 @@ def add_stats(prefix, model_name, mae, rmse, r2):
                       columns=['name', 'mae', 'rmse', 'r2'])
 
     # Append dataframe to existing file
-    df.to_csv(f"results/stats.csv", index=False, header=False, mode='a') 
+    df.to_csv(f"results/stats.csv", index=False, header=False, mode='a')
 
 
 def main():
@@ -176,18 +200,28 @@ def main():
 
         X_train, y_train, X_test, y_test = split_data_for_lr(data)
 
-        preprocessor = ColumnTransformer(
+        preprocessor1 = ColumnTransformer(
             transformers=[
                 ('ohe', OneHotEncoder(handle_unknown='ignore', drop='if_binary'), categorical_features),
-                ('num', 'passthrough', numeric_features)
+                ('pass', 'passthrough', numeric_features)
             ]
         )
+
+        preprocessor2 = ColumnTransformer(
+            transformers=[
+                ('ohe', OneHotEncoder(handle_unknown='ignore', drop='if_binary'), categorical_features),
+                ('stand_scale', StandardScaler(), numeric_features)
+            ]
+        )
+
+
 
         models = {
             'linear_regression': LinearRegression()
         }
 
-        evaluate_models(X_train, y_train, X_test, y_test, models, preprocessor, 'por')
+        # evaluate_models_cont(X_train, y_train, X_test, y_test, models, preprocessor1, 'por')
+        evaluate_models_cont(X_train, y_train, X_test, y_test, models, preprocessor2, 'por')
 
 
 
