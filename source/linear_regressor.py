@@ -1,80 +1,138 @@
-def evaluate_models_cont(X_train, y_train, X_test, y_test, models, preprocessor, subject):
-    """
-    Iterates through models and evaluates them, while writing necessary stats and data to CSV files.
+import numpy as np
+import pandas as pd
+from sklearn.compose import ColumnTransformer
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-    This function is called when preprocessors do not change number of feature columns after One-Hot Encoding
-    (e.g. RFE and PolynomialFeatures).
+import data_utils as du
+from features import FeatureList
+
+
+def train_and_evaluate(X_train, y_train, X_test, y_test, subject):
+    """
+    Trains and evaluates the linear regression model through different preprocessing steps.
 
     Parameters:
-        X_train (DataFrame): Training dataset of features.
-        y_train (DataFrame): Training dataset of targets.
-        X_test (DataFrame): Testing dataset of features.
-        y_test (DataFrame): Testing dataset of targets.
-        models (dict): List of models.
-        preprocessor (ColumnTransformer): Column transformer which contains feature preprocessing methods.
+        X_train (DataFrame): Feature DataFrame of training data.
+        y_train (DataFrame): Target DataFrame of training data.
+        X_test (DataFrame): Feature DataFrame of test data.
+        y_test (DataFrame): Target DataFrame of test data.
         subject (string): School subject of data ("por" or "mat").
     """
 
-    # For every model create individual pipelines
-    for name, model in models.items():
+    # Create default FeatureList
+    features = FeatureList()
+
+    # Make all preprocessors
+    preprocessors = [
+        ("no_scaling", ColumnTransformer([
+            ('cat', OneHotEncoder(handle_unknown='ignore', drop='if_binary'), features.categorical),
+            ('num', 'passthrough', features.numerical)
+        ])),
+
+        ("standard_scaling", ColumnTransformer([
+            ('cat', OneHotEncoder(handle_unknown='ignore', drop='if_binary'), features.categorical),
+            ('num', StandardScaler(), features.numerical)
+        ]))
+    ]
+
+    # Used for stats storage
+    results = []
+
+    for name, preprocessor in preprocessors:
         pipeline = Pipeline(steps=[
             ('preprocessor', preprocessor),
-            ('feature_selection', SelectKBest(score_func=f_regression, k=5)),  # Select the top 5 features
-            ('regressor', model)
+            ('regressor', LinearRegression())
         ])
 
-        # Train model
         pipeline.fit(X_train, y_train)
-        # Make predictions
         y_pred = pipeline.predict(X_test)
 
+        # Get new column names after One-Hot Encoding, etc.
+        update_columns(preprocessor, features)
 
+        # Get model's coefficients
+        weights_intercept = create_w_b_table(pipeline, features)
 
-        # Write important stats and results to CSV files
-        #calculate_and_write_results(name, pipeline, y_pred, y_test, subject)
+        # Write coefficients to CSV file
+        du.write_result(weights_intercept, f"{name}_linear_regression", subject)
 
-        model = pipeline.named_steps['regressor']
-        weights = model.coef_
-        intercept = model.intercept_
-
-        mse = mean_squared_error(y_test, y_pred)
-        mae = mean_absolute_error(y_test, y_pred)
-        rmse = np.sqrt(mse)
+        # Calculate stats
         r2 = r2_score(y_test, y_pred)
+        mae = mean_absolute_error(y_test, y_pred)
+        rmse = np.sqrt(mean_squared_error(y_test, y_pred))
 
-        print(weights)
-        print(intercept)
-        print(f"Mae: {mae}")
-        print(f"RMSE: {rmse}")
-        print(f"R2: {r2}")
+        # Append to list of results
+        results.append({
+            'Preprocessor': name,
+            'Model' : "linear_regression",
+            'MAE': np.round(mae, 2),
+            'RMSE': np.round(rmse, 2),
+            'R2': np.round(r2, 2)
+        })
+
+        # Prepare default FeatureList for next iteration (will use different preprocessing)
+        features = FeatureList()
+
+    # In the end, append every stats result to CSV file
+    du.add_stats(pd.DataFrame(results), subject)
+
+def update_columns(preprocessor, features):
+    """
+    Updates column names based on preprocessor steps.
+
+    Parameters:
+        preprocessor (ColumnTransformer): Preprocessor ColumnTransformer.
+        features (FeatureList): Feature list.
+    """
+
+    # Update all columns
+    ohe = preprocessor.named_transformers_['cat']
+    encoded_names = ohe.get_feature_names_out(features.categorical)
+
+    # Recreate all feature column headers
+    all_feature_names = list(encoded_names) + features.numerical
+    # Also show intercept (bias) in the CSV
+    all_feature_names.append('intercept')
+
+    features.all = all_feature_names
+
+def create_w_b_table(pipeline, features):
+    """
+    Creates weights and intercept (b) DataFrame based on model's coefficients.
+
+    Parameters:
+        pipeline (Pipeline): Pipeline.
+        features (FeatureList): Feature list.
+
+    """
+    # Get coefficient (weights) and intercept (bias)
+    model = pipeline.named_steps['regressor']
+    weights = model.coef_
+    intercept = model.intercept_
+
+    # Round values to 4 decimals
+    result = np.append(weights, intercept)
+    rounded_result = np.round(result, decimals=4)
+
+    result = pd.DataFrame([rounded_result], columns=features.all)
+
+    print(result)
+
+    return result
+
+def lr_test():
+    data_por = du.read_csv("../data/student-por.csv")
+    data_mat = du.read_csv("../data/student-mat.csv")
 
 
-def main():
-    if __name__ == '__main__':
-        data = read_csv("../data/student-por.csv")
+    X_train_p, y_train_p, X_test_p, y_test_p = du.split_data_for_lr(data_por)
+    X_train_m, y_train_m, X_test_m, y_test_m = du.split_data_for_lr(data_mat)
 
-        X_train, y_train, X_test, y_test = split_data_for_lr(data)
-
-        preprocessor1 = ColumnTransformer(
-            transformers=[
-                ('ohe', OneHotEncoder(handle_unknown='ignore', drop='if_binary'), categorical_features),
-                ('pass', 'passthrough', numeric_features)
-            ]
-        )
-
-        preprocessor2 = ColumnTransformer(
-            transformers=[
-                ('ohe', OneHotEncoder(handle_unknown='ignore', drop='if_binary'), categorical_features),
-                ('stand_scale', StandardScaler(), numeric_features)
-            ]
-        )
+    train_and_evaluate(X_train_p, y_train_p, X_test_p, y_test_p, 'por')
+    train_and_evaluate(X_train_m, y_train_m, X_test_m, y_test_m, 'mat')
 
 
-
-        models = {
-            'linear_regression': LinearRegression()
-        }
-
-        # evaluate_models_cont(X_train, y_train, X_test, y_test, models, preprocessor1, 'por')
-        evaluate_models_cont(X_train, y_train, X_test, y_test, models, preprocessor2, 'por')
-
+lr_test()

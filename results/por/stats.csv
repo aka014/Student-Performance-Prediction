@@ -1,0 +1,12 @@
+Preprocessor,Model,MAE,RMSE,R2
+no_scaling,linear_regression_train,1.55,2.01,0.42
+no_scaling,linear_regression_g1_g2_train,0.67,1.01,0.85
+no_scaling,linear_regression_g1_g2,0.95,1.65,0.81
+no_scaling,linear_regression,2.64,3.80,0.01
+standard_scaling,linear_regression,2.64,3.80,0.01
+no_scaling,linear_regression_kbest5,2.61,3.67,0.08
+standard_scaling,linear_regression_kbest5,2.61,3.66,0.08
+no_scaling,dummy_regressor_test,3.24,4.28,-0.25
+no_scaling,dummy_regressor_train,2.08,2.62,0.00
+no_scaling,linear_regression_ms,2.26,2.88,-0.21
+standard_scaling,linear_regression_ms,2.26,2.88,-0.21

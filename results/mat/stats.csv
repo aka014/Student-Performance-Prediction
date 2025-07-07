@@ -1,0 +1,4 @@
+Preprocessor,Model,MAE,RMSE,R2
+no_scaling,linear_regression,3.41,4.39,-0.10
+standard_scaling,linear_regression,3.41,4.39,-0.10
+no_scaling,dummy_regressor,3.06,4.24,-0.02

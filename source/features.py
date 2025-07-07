@@ -28,7 +28,7 @@ class FeatureList:
                                             'guardian', 'schoolsup', 'famsup', 'paid', 'activities', 'nursery',
                                             'higher', 'internet', 'romantic']
 
-        self._all = categorical + numerical
+        self._all = self._categorical + self._numerical
 
     @property
     def numerical(self):
