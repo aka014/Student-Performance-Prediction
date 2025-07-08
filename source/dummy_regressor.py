@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.dummy import DummyRegressor
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
+from sklearn.pipeline import Pipeline
 
 import data_utils as du
 
@@ -16,10 +17,13 @@ def main():
 
         for i in range(2):
 
-            dummy = DummyRegressor(strategy='mean')
+            pipeline = Pipeline([
+                ('regressor', DummyRegressor(strategy='mean'))
+            ])
+
             if i == 0:
-                dummy.fit(X_train_p, y_train_p)
-                y_pred = dummy.predict(X_test_p)
+                pipeline.fit(X_train_p, y_train_p)
+                y_pred = pipeline.predict(X_test_p)
 
                 mse = mean_squared_error(y_test_p, y_pred)
                 mae = mean_absolute_error(y_test_p, y_pred)
@@ -27,8 +31,8 @@ def main():
                 r2 = r2_score(y_test_p, y_pred)
 
             else:
-                dummy.fit(X_train_m, y_train_m)
-                y_pred = dummy.predict(X_test_m)
+                pipeline.fit(X_train_m, y_train_m)
+                y_pred = pipeline.predict(X_test_m)
 
                 mse = mean_squared_error(y_test_m, y_pred)
                 mae = mean_absolute_error(y_test_m, y_pred)
