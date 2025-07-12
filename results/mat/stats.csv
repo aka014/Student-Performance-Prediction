@@ -2,3 +2,15 @@ Preprocessor,Model,MAE,RMSE,R2
 no_scaling,linear_regression,3.41,4.39,-0.10
 standard_scaling,linear_regression,3.41,4.39,-0.10
 no_scaling,dummy_regressor,3.06,4.24,-0.02
+no_scaling,ridge_extended_train_70,3.16,4.14,0.02
+standard_scaling,ridge_extended_train_90,3.12,4.1,0.04
+no_scaling_fs,ridge_extended_train_120_select40,3.08,4.1,0.04
+standard_scaling_fs,ridge_extended_train_140_select40,3.07,4.06,0.06
+no_scaling_fs,ridge_extended_train_80_select20,3.05,4.15,0.02
+standard_scaling_fs,ridge_extended_train_110_select15,3.09,4.16,0.01
+no_scaling_fs,ridge_extended_train_80_select20,3.05,4.15,0.02
+standard_scaling_fs,ridge_extended_train_110_select15,3.09,4.16,0.01
+no_scaling_fs,ridge_extended_train_80_select20,3.05,4.15,0.02
+standard_scaling_fs,ridge_extended_train_100_select17,3.09,4.17,0.01
+no_scaling_fs,ridge_extended_train_80_select17,3.05,4.14,0.02
+standard_scaling_fs,ridge_extended_train_100_select17,3.09,4.17,0.01

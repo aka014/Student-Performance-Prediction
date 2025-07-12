@@ -7,7 +7,7 @@ from sklearn.pipeline import Pipeline
 import data_utils as du
 
 
-def main():
+def dr_test():
     if __name__ == '__main__':
         data_p = du.read_csv("../data/student-por.csv")
         data_m = du.read_csv("../data/student-mat.csv")
@@ -53,4 +53,4 @@ def main():
             else:
                 du.add_stats(pd.DataFrame(result), 'mat')
 
-main()
+dr_test()

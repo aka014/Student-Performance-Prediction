@@ -1,0 +1,2 @@
+sex_M,address_U,Pstatus_T,Mjob_at_home,Mjob_health,Mjob_other,Fjob_at_home,Fjob_health,Fjob_other,Fjob_services,Fjob_teacher,reason_course,reason_other,reason_reputation,guardian_other,schoolsup_yes,paid_yes,activities_yes,higher_yes,internet_yes,romantic_yes,age,Medu,traveltime,studytime,failures,goout,Dalc,health,absences,intercept
+-0.6257,0.2357,-0.2651,-0.2275,0.4252,-0.3535,0.3631,-0.1117,-0.147,-0.5368,0.4323,-0.2641,-0.1176,0.1998,-0.1914,-1.1463,-0.2725,0.4306,1.3853,0.1474,-0.3443,0.3627,0.1765,-0.0807,0.2547,-0.6607,-0.2665,-0.1519,-0.2525,-0.3001,11.9364

@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from iso8601 import is_iso8601
 from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
@@ -92,6 +93,15 @@ def update_columns(preprocessor, features):
     ohe = preprocessor.named_transformers_['cat']
     encoded_names = ohe.get_feature_names_out(features.categorical)
 
+    # Check if polynomial features were added
+    num_tr = preprocessor.named_transformers_['num']
+
+    if isinstance(num_tr, Pipeline):
+        poly = num_tr.named_steps['poly']
+
+        if poly is not None:
+            features.numerical = poly.get_feature_names_out(features.numerical).tolist()
+
     # Recreate all feature column headers
     all_feature_names = list(encoded_names) + features.numerical
     # Also show intercept (bias) in the CSV
@@ -117,22 +127,33 @@ def create_w_b_table(pipeline, features):
     result = np.append(weights, intercept)
     rounded_result = np.round(result, decimals=4)
 
+    # If feature selection was performed
+    if "feature_selection" in pipeline.named_steps:
+        feature_mask = pipeline.named_steps['feature_selection'].support_
+        features.all.remove('intercept')
+        feature_names = (np.array(features.all))[feature_mask].tolist()
+        feature_names.append('intercept')
+
+        result = pd.DataFrame([rounded_result], columns=feature_names)
+        return result
+
     result = pd.DataFrame([rounded_result], columns=features.all)
 
-    print(result)
+    # print(result)
 
     return result
 
 def lr_test():
-    data_por = du.read_csv("../data/student-por.csv")
-    data_mat = du.read_csv("../data/student-mat.csv")
+    if __name__ == '__main__':
+        data_por = du.read_csv("../data/student-por.csv")
+        data_mat = du.read_csv("../data/student-mat.csv")
 
 
-    X_train_p, y_train_p, X_test_p, y_test_p = du.split_data_for_lr(data_por)
-    X_train_m, y_train_m, X_test_m, y_test_m = du.split_data_for_lr(data_mat)
+        X_train_p, y_train_p, X_test_p, y_test_p = du.split_data_for_lr(data_por)
+        X_train_m, y_train_m, X_test_m, y_test_m = du.split_data_for_lr(data_mat)
 
-    train_and_evaluate(X_train_p, y_train_p, X_test_p, y_test_p, 'por')
-    train_and_evaluate(X_train_m, y_train_m, X_test_m, y_test_m, 'mat')
+        train_and_evaluate(X_train_p, y_train_p, X_test_p, y_test_p, 'por')
+        train_and_evaluate(X_train_m, y_train_m, X_test_m, y_test_m, 'mat')
 
 
 lr_test()
