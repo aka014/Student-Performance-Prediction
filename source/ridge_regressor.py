@@ -137,6 +137,7 @@ def train_and_evaluate(X_train, y_train, X_test, y_test, subject, preprocessors)
             param_grid=param_grid,
             cv=cv,
             scoring='neg_mean_absolute_error',
+            n_jobs=-1
         )
 
         grid_search.fit(X_train, y_train)
@@ -179,7 +180,7 @@ def rr_test():
     if __name__ == '__main__':
 
         data_por = du.read_csv("../data/student-por.csv")
-        #data_mat = du.read_csv("../data/student-mat.csv")
+        # data_mat = du.read_csv("../data/student-mat.csv")
 
         features = FeatureList()
 
@@ -218,14 +219,15 @@ def rr_test():
 
 
         X_train_p, y_train_p, X_test_p, y_test_p = du.split_data_for_lr(data_por)
-        #X_train_m, y_train_m, X_test_m, y_test_m = du.split_data_for_lr(data_mat)
+        # X_train_m, y_train_m, X_test_m, y_test_m = du.split_data_for_lr(data_mat)
 
+        # Get the best parameters using CV
         max_alpha_p, feat_num_p = train_and_evaluate(X_train_p, y_train_p, X_train_p, y_train_p, 'por', preprocessors)
-        #max_alpha_m, feat_num_m = train_and_evaluate(X_train_m, y_train_m, X_train_m, y_train_m, 'mat')
+        # max_alpha_m, feat_num_m = train_and_evaluate(X_train_m, y_train_m, X_train_m, y_train_m, 'mat', preprocessors)
 
-
+        # Final test using the best parameters
         train_and_evaluate_final(X_train_p, y_train_p, X_test_p, y_test_p, 'por', max_alpha_p, feat_num_p, preprocessors)
-        #train_and_evaluate_final(X_train_m, y_train_m, X_test_m, y_test_m, 'mat', max_alpha_m, feat_num_m)
+        # train_and_evaluate_final(X_train_m, y_train_m, X_test_m, y_test_m, 'mat', max_alpha_m, feat_num_m, preprocessors)
 
 
 rr_test()

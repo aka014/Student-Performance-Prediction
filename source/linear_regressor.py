@@ -148,7 +148,6 @@ def lr_test():
         data_por = du.read_csv("../data/student-por.csv")
         data_mat = du.read_csv("../data/student-mat.csv")
 
-
         X_train_p, y_train_p, X_test_p, y_test_p = du.split_data_for_lr(data_por)
         X_train_m, y_train_m, X_test_m, y_test_m = du.split_data_for_lr(data_mat)
 
