@@ -177,58 +177,56 @@ def train_and_evaluate(X_train, y_train, X_test, y_test, subject, preprocessors)
     return max_alpha, best_num
 
 def rr_test():
-    if __name__ == '__main__':
+    data_por = du.read_csv("../data/student-por.csv")
+    # data_mat = du.read_csv("../data/student-mat.csv")
 
-        data_por = du.read_csv("../data/student-por.csv")
-        # data_mat = du.read_csv("../data/student-mat.csv")
+    features = FeatureList()
 
-        features = FeatureList()
+    num_pipeline1 = Pipeline(steps=[
+        ('scaler', StandardScaler()),
+        ('poly', PolynomialFeatures(degree=2, include_bias=True, interaction_only=True)),
+    ])
 
-        num_pipeline1 = Pipeline(steps=[
-            ('scaler', StandardScaler()),
-            ('poly', PolynomialFeatures(degree=2, include_bias=True, interaction_only=True)),
-        ])
+    num_pipeline2 = Pipeline(steps=[
+        ('poly', PolynomialFeatures(degree=2, include_bias=True, interaction_only=True)),
+        ('scaler', StandardScaler())
+    ])
 
-        num_pipeline2 = Pipeline(steps=[
-            ('poly', PolynomialFeatures(degree=2, include_bias=True, interaction_only=True)),
-            ('scaler', StandardScaler())
-        ])
+    # Make all preprocessors
+    preprocessors = [
+        # ("no_scaling", ColumnTransformer([
+        #     ('cat', OneHotEncoder(handle_unknown='ignore', drop='if_binary'), features.categorical),
+        #     ('num', 'passthrough', features.numerical)
+        # ])),
+        #
+        # ("standard_scaling", ColumnTransformer([
+        #     ('cat', OneHotEncoder(handle_unknown='ignore', drop='if_binary'), features.categorical),
+        #     ('num', StandardScaler(), features.numerical)
+        # ])),
 
-        # Make all preprocessors
-        preprocessors = [
-            # ("no_scaling", ColumnTransformer([
-            #     ('cat', OneHotEncoder(handle_unknown='ignore', drop='if_binary'), features.categorical),
-            #     ('num', 'passthrough', features.numerical)
-            # ])),
-            #
-            # ("standard_scaling", ColumnTransformer([
-            #     ('cat', OneHotEncoder(handle_unknown='ignore', drop='if_binary'), features.categorical),
-            #     ('num', StandardScaler(), features.numerical)
-            # ])),
+        ("standard_scaling_poly", ColumnTransformer([
+            ('cat', OneHotEncoder(handle_unknown='ignore', drop='if_binary'), features.categorical),
+            ('num', num_pipeline1, features.numerical)
+        ])),
 
-            ("standard_scaling_poly", ColumnTransformer([
-                ('cat', OneHotEncoder(handle_unknown='ignore', drop='if_binary'), features.categorical),
-                ('num', num_pipeline1, features.numerical)
-            ])),
+        ("poly_standard_scaling", ColumnTransformer([
+            ('cat', OneHotEncoder(handle_unknown='ignore', drop='if_binary'), features.categorical),
+            ('num', num_pipeline2, features.numerical)
+        ]))
+    ]
 
-            ("poly_standard_scaling", ColumnTransformer([
-                ('cat', OneHotEncoder(handle_unknown='ignore', drop='if_binary'), features.categorical),
-                ('num', num_pipeline2, features.numerical)
-            ]))
-        ]
+    X_train_p, y_train_p, X_test_p, y_test_p = du.split_data_for_lr(data_por)
+    # X_train_m, y_train_m, X_test_m, y_test_m = du.split_data_for_lr(data_mat)
 
+    # Get the best parameters using CV
+    max_alpha_p, feat_num_p = train_and_evaluate(X_train_p, y_train_p, X_train_p, y_train_p, 'por', preprocessors)
+    # max_alpha_m, feat_num_m = train_and_evaluate(X_train_m, y_train_m, X_train_m, y_train_m, 'mat', preprocessors)
 
-        X_train_p, y_train_p, X_test_p, y_test_p = du.split_data_for_lr(data_por)
-        # X_train_m, y_train_m, X_test_m, y_test_m = du.split_data_for_lr(data_mat)
-
-        # Get the best parameters using CV
-        max_alpha_p, feat_num_p = train_and_evaluate(X_train_p, y_train_p, X_train_p, y_train_p, 'por', preprocessors)
-        # max_alpha_m, feat_num_m = train_and_evaluate(X_train_m, y_train_m, X_train_m, y_train_m, 'mat', preprocessors)
-
-        # Final test using the best parameters
-        train_and_evaluate_final(X_train_p, y_train_p, X_test_p, y_test_p, 'por', max_alpha_p, feat_num_p, preprocessors)
-        # train_and_evaluate_final(X_train_m, y_train_m, X_test_m, y_test_m, 'mat', max_alpha_m, feat_num_m, preprocessors)
+    # Final test using the best parameters
+    train_and_evaluate_final(X_train_p, y_train_p, X_test_p, y_test_p, 'por', max_alpha_p, feat_num_p, preprocessors)
+    # train_and_evaluate_final(X_train_m, y_train_m, X_test_m, y_test_m, 'mat', max_alpha_m, feat_num_m, preprocessors)
 
 
-rr_test()
+if __name__ == '__main__':
+    rr_test()
 

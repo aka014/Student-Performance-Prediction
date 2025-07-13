@@ -32,3 +32,4 @@ no_scaling,lasso_extended_train_0.3275_mae,2.95,4.04,0.07
 standard_scaling,lasso_extended_train_0.3275_mae,2.96,4.02,0.08
 standard_scaling_poly,lasso_extended_train_0.2848_mae,2.87,3.98,0.10
 poly_standard_scaling,lasso_extended_train_0.1233_mae,3.12,4.21,-0.01
+
