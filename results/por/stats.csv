@@ -4,8 +4,6 @@ no_scaling,linear_regression_g1_g2_train,0.67,1.01,0.85
 no_scaling,linear_regression_g1_g2,0.95,1.65,0.81
 no_scaling,linear_regression,2.64,3.80,0.01
 standard_scaling,linear_regression,2.64,3.80,0.01
-no_scaling,linear_regression_kbest5,2.61,3.67,0.08
-standard_scaling,linear_regression_kbest5,2.61,3.66,0.08
 no_scaling,dummy_regressor_test,3.24,4.28,-0.25
 no_scaling,dummy_regressor_train,2.08,2.62,0.00
 no_scaling,linear_regression_ms,2.26,2.88,-0.21
@@ -111,6 +109,6 @@ standard_scaling_poly,elastic_net_train_0.1150_mae,1.63,2.06,0.38
 poly_standard_scaling,elastic_net_train_0.0614_mae,1.59,2.04,0.39
 no_scaling,elastic_net_extended_train_0.0285_mae,2.62,3.79,0.02
 standard_scaling,elastic_net_extended_train_0.0305_mae,2.62,3.78,0.02
-standard_scaling_poly,elastic_net_extended_train_0.1150_mae,2.64,3.72,0.05
+standard_scaling_poly,elastic_net_extended_train_0.1150_l10.8_mae,2.64,3.72,0.05
 poly_standard_scaling,elastic_net_extended_train_0.0614_mae,2.63,3.77,0.03
 

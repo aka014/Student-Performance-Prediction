@@ -53,4 +53,5 @@ def dr_test():
             else:
                 du.add_stats(pd.DataFrame(result), 'mat')
 
-dr_test()
+if __name__ == '__main__':
+    dr_test()

@@ -33,3 +33,14 @@ standard_scaling,lasso_extended_train_0.3275_mae,2.96,4.02,0.08
 standard_scaling_poly,lasso_extended_train_0.2848_mae,2.87,3.98,0.10
 poly_standard_scaling,lasso_extended_train_0.1233_mae,3.12,4.21,-0.01
 
+no_scaling,dummy_regressor_train,3.47,4.62,0.0
+no_scaling,linear_regression_train,2.98,3.87,0.3
+standard_scaling,linear_regression_train,2.98,3.87,0.3
+standard_scaling_poly,ridge_train_100_select20_mae,3.01,3.97,0.26
+poly_standard_scaling,ridge_train_55_select30_mae,2.95,3.89,0.29
+standard_scaling_poly,ridge_extended_train_100_select20_mae,3.06,4.26,-0.03
+poly_standard_scaling,ridge_extended_train_55_select30_mae,3.30,4.37,-0.09
+no_scaling,ridge_train_100_select20_mae,3.08,4.11,0.21
+standard_scaling,ridge_train_100_select20_mae,3.09,4.08,0.22
+no_scaling,ridge_extended_train_100_select20_mae,3.02,4.13,0.03
+standard_scaling,ridge_extended_train_100_select20_mae,3.12,4.14,0.02

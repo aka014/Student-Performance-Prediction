@@ -1,0 +1,2 @@
+sex_M,famsize_LE3,Mjob_at_home,Mjob_health,Mjob_services,Fjob_teacher,reason_course,reason_other,reason_reputation,schoolsup_yes,famsup_yes,paid_yes,higher_yes,romantic_yes,age,Medu,traveltime,failures,famrel,goout,intercept
+0.4432,0.2127,-0.2676,0.2551,0.4306,0.2002,-0.3147,0.216,0.29,-0.3977,-0.4093,0.2134,0.3136,-0.4788,-0.2614,0.3934,-0.293,-1.1869,0.2175,-0.5378,15.0061
