@@ -24,7 +24,7 @@ This repository contains the Python scripts used for the experiments.
 -   `ridge_regressor.py`: Implements Ridge Regression with Recursive Feature Elimination (RFE).
 -   `lasso_regressor.py`: Implements Lasso Regression for feature selection.
 -   `elastic_net.py`: Implements Elastic Net Regression.
--   'create_plots.py': Creates plots that are necessary for this project.
+-   `create_plots.py`: Creates plots that are necessary for this project.
 
 ---
 
