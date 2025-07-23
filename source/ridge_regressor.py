@@ -15,7 +15,7 @@ from features import FeatureList
 
 def train_and_evaluate_final(X_train, y_train, X_test, y_test, subject, alpha_list, num_list, preprocessors):
     """
-    Trains and evaluates the ridge regression model through different preprocessing steps.
+    Trains and evaluates the ridge regression model through different preprocessing steps with optimized hyperparameters.
 
     Parameters:
         X_train (DataFrame): Feature DataFrame of training data.
