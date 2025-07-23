@@ -26,6 +26,20 @@ This repository contains the Python scripts used for the experiments.
 -   `elastic_net.py`: Implements Elastic Net Regression.
 -   `create_plots.py`: Creates plots that are necessary for this project.
 
+## Repository Structure
+
+The repository is organized into the following directories and scripts:
+
+-   **`/results`**: Contains key outputs from the analysis. This allows for a quick overview of the project's findings without needing to run the code.
+-   **`/source`**: Contains all the Python source code (`.py` files) for the experiments:
+    -   `data_utils.py`: Utility functions for reading and splitting the dataset.
+    -   `features.py`: A class that defines the categorical and numerical features used in the models.
+    -   `dummy_regressor.py`: A baseline model that always predicts the mean.
+    -   `linear_regressor.py`: Implements the Ordinary Least Squares (OLS) regression model.
+    -   `ridge_regressor.py`: Implements Ridge Regression.
+    -   `lasso_regressor.py`: Implements Lasso Regression for feature selection.
+    -   `elastic_net.py`: Implements Elastic Net Regression.
+    -   `create_plots.py`: A script to create plots that are necessary for this project.
 ---
 
 ## Dataset

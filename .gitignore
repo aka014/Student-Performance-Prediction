@@ -1,5 +1,4 @@
 .idea
-data/*
-!data/ .gitkeep
 _*
 plots
+data
