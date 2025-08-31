@@ -73,8 +73,4 @@ The scripts will automatically read the data from the `data/` directory, run the
 If you use this code or the findings from the associated paper, please cite it.
 
 **Full Paper:**
-*A link to the full paper will be added here once it is available on Zenodo or another repository.*
-
-**This Repository:**
-```
-```
+Please click [here](https://zenodo.org/records/16411533).
